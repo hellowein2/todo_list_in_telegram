@@ -47,15 +47,21 @@ def add_user_data(message):
 
 
 def add_task(message):
-    connection = sqlite3.connect('ignore/data_users.db')
-    cursor = connection.cursor()
+    if message.text == 'Показать задачи':
+        view_tasks(message)
+    elif message.text == 'Добавить задачу':
+        msg = bot.send_message(message.chat.id, 'Введите задачу')
+        bot.register_next_step_handler(msg, add_task)
+    else:
+        connection = sqlite3.connect('ignore/data_users.db')
+        cursor = connection.cursor()
 
-    cursor.execute(f'INSERT INTO Tasks{message.from_user.id} (task, time) VALUES (?, ?)', (f'{message.text}', f'{datetime.today().strftime("%Y.%m.%d %H:%M")}'))
+        cursor.execute(f'INSERT INTO Tasks{message.from_user.id} (task, time) VALUES (?, ?)', (f'{message.text}', f'{datetime.today().strftime("%Y.%m.%d %H:%M")}'))
 
-    connection.commit()
-    cursor.close()
-    connection.close()
-    bot.send_message(message.chat.id, 'Задача добавлена!')
+        connection.commit()
+        cursor.close()
+        connection.close()
+        bot.send_message(message.chat.id, 'Задача добавлена!')
 
 
 
