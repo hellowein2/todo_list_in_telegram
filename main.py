@@ -1,9 +1,9 @@
 import telebot
 import sqlite3
 from telebot import types
-import datetime
+from datetime import datetime
 
-API_TOKEN = '6962301596:AAGFJ9IUFDQL62-EcHUAvOBerCGaBsBSOiQ'
+API_TOKEN = ''
 
 bot = telebot.TeleBot(API_TOKEN)
 
@@ -48,8 +48,11 @@ def add_task(message):
     connection = sqlite3.connect('data_users.db')
     cursor = connection.cursor()
 
-    cursor.execute(f'INSERT INTO Tasks{message.from_user.id} (task, time) VALUES (?, ?)', ('sqSQ', f'{datetime.time}'))
+    cursor.execute(f'INSERT INTO Tasks{message.from_user.id} (task, time) VALUES (?, ?)', ('sqSQ', f'{datetime.today()}'))
 
+    connection.commit()
+    cursor.close()
+    connection.close()
 
 @bot.message_handler(commands=['help', 'start'])
 def send_welcome(message):
