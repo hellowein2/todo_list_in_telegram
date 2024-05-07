@@ -12,6 +12,7 @@ bot = telebot.TeleBot(API_TOKEN)
 def add_user_data(message):
     global copyblock
     copyblock = True
+
     username = message.from_user.username
     user_id = message.from_user.id
 
@@ -24,6 +25,7 @@ def add_user_data(message):
     username TEXT
     )
     ''')
+    # checking for duplicates
     for i in cursor.execute('SELECT user_id FROM Users'):
         if message.from_user.id == i[0]:
             copyblock = False
@@ -48,12 +50,12 @@ def add_task(message):
     connection = sqlite3.connect('ignore/data_users.db')
     cursor = connection.cursor()
 
-    cursor.execute(f'INSERT INTO Tasks{message.from_user.id} (task, time) VALUES (?, ?)', ('sqSQ', f'{datetime.today()}'))
+    cursor.execute(f'INSERT INTO Tasks{message.from_user.id} (task, time) VALUES (?, ?)', (f'{message.text}', f'{datetime.today().strftime("%D %H:%M")}'))
 
     connection.commit()
     cursor.close()
     connection.close()
-
+    bot.send_message(message.chat.id, 'Задача добавлена!')
 @bot.message_handler(commands=['help', 'start'])
 def send_welcome(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -66,7 +68,8 @@ def send_welcome(message):
 @bot.message_handler(content_types=['text'])
 def send_message(message):
     if message.text == 'Добавить задачу':
-        add_task(message)
+        msg = bot.send_message(message.chat.id, 'Введите задачу')
+        bot.register_next_step_handler(msg, add_task)
 
 
 bot.infinity_polling()
