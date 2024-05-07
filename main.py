@@ -2,7 +2,7 @@ import telebot
 import sqlite3
 from telebot import types
 from datetime import datetime
-from api import API
+from ignore.api import API
 
 API_TOKEN = API
 
@@ -15,7 +15,7 @@ def add_user_data(message):
     username = message.from_user.username
     user_id = message.from_user.id
 
-    connection = sqlite3.connect('data_users.db')
+    connection = sqlite3.connect('ignore/data_users.db')
     cursor = connection.cursor()
 
     cursor.execute('''
@@ -45,7 +45,7 @@ def add_user_data(message):
 
 
 def add_task(message):
-    connection = sqlite3.connect('data_users.db')
+    connection = sqlite3.connect('ignore/data_users.db')
     cursor = connection.cursor()
 
     cursor.execute(f'INSERT INTO Tasks{message.from_user.id} (task, time) VALUES (?, ?)', ('sqSQ', f'{datetime.today()}'))
