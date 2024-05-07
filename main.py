@@ -1,5 +1,9 @@
 import telebot
+import sqlite3
 
+# Создаем подключение к базе данных
+connection = sqlite3.connect('data_users.db')
+connection.close()
 
 API_TOKEN = '6962301596:AAGFJ9IUFDQL62-EcHUAvOBerCGaBsBSOiQ'
 
