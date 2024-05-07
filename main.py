@@ -69,6 +69,7 @@ def view_tasks2(message):
     connection = sqlite3.connect('ignore/data_users.db')
     cursor = connection.cursor()
     global kb1
+    kb1 = ''
     count = 0
 
     dic = {}
@@ -76,8 +77,10 @@ def view_tasks2(message):
         count += 1
         kb1 = types.InlineKeyboardMarkup()
         dic["btn"+str(count)] = types.InlineKeyboardButton(text=f'{i[0]}', callback_data=count)
+
     for i in range(1, count+1):
         kb1.add(dic[f'btn{i}'])
+
     bot.send_message(message.chat.id, "Привет, я бот помощник по тестам!", reply_markup=kb1)
 
 
