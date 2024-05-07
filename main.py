@@ -65,6 +65,25 @@ def add_task(message):
 
 
 
+def view_tasks2(message):
+    connection = sqlite3.connect('ignore/data_users.db')
+    cursor = connection.cursor()
+    global kb1
+    count = 0
+
+    dic = {}
+    for i in cursor.execute(f'SELECT * FROM Tasks{message.from_user.id}'):
+        count += 1
+        kb1 = types.InlineKeyboardMarkup()
+        dic["btn"+str(count)] = types.InlineKeyboardButton(text=f'{i[0]}', callback_data=count)
+    for i in range(1, count+1):
+        kb1.add(dic[f'btn{i}'])
+    bot.send_message(message.chat.id, "Привет, я бот помощник по тестам!", reply_markup=kb1)
+
+
+    cursor.close()
+    connection.close()
+
 def view_tasks(message):
     connection = sqlite3.connect('ignore/data_users.db')
     cursor = connection.cursor()
@@ -94,7 +113,7 @@ def send_message(message):
         msg = bot.send_message(message.chat.id, 'Введите задачу')
         bot.register_next_step_handler(msg, add_task)
     if message.text == 'Показать задачи':
-        view_tasks(message)
+        view_tasks2(message)
 
 
 
