@@ -2,8 +2,9 @@ import telebot
 import sqlite3
 from telebot import types
 from datetime import datetime
+from api import API
 
-API_TOKEN = ''
+API_TOKEN = API
 
 bot = telebot.TeleBot(API_TOKEN)
 
@@ -24,7 +25,6 @@ def add_user_data(message):
     )
     ''')
     for i in cursor.execute('SELECT user_id FROM Users'):
-        print(i[0])
         if message.from_user.id == i[0]:
             copyblock = False
             print('Пользователь уже в базе')
