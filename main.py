@@ -1,21 +1,6 @@
 import telebot
 import sqlite3
 
-# # Создаем подключение к базе данных
-# connection = sqlite3.connect('data_users.db')
-# cursor = connection.cursor()
-#
-# cursor.execute('''
-# CREATE TABLE IF NOT EXISTS Users (
-# user_id INTEGER NOT NULL,
-# username TEXT NOT NULL
-# )
-# ''')
-# connection.commit()
-# connection.close()
-
-
-
 
 API_TOKEN = '6962301596:AAGFJ9IUFDQL62-EcHUAvOBerCGaBsBSOiQ'
 
@@ -28,9 +13,25 @@ def add_user_data(message):
 
     connection = sqlite3.connect('data_users.db')
     cursor = connection.cursor()
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS Users (
+    user_id INTEGER NOT NULL,
+    username TEXT NOT NULL
+    )
+    ''')
+
     cursor.execute('INSERT INTO Users (user_id, username) VALUES (?, ?)', (f'{user_id}', f'{username}'))
 
+    cursor.execute(f'''
+    CREATE TABLE IF NOT EXISTS Tasks{user_id} (
+    task TEXT NOT NULL,
+    time TEXT NOT NULL
+    )
+    ''')
+
     connection.commit()
+    cursor.close()
     connection.close()
 
 
