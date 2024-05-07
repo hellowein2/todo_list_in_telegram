@@ -50,7 +50,7 @@ def add_task(message):
     connection = sqlite3.connect('ignore/data_users.db')
     cursor = connection.cursor()
 
-    cursor.execute(f'INSERT INTO Tasks{message.from_user.id} (task, time) VALUES (?, ?)', (f'{message.text}', f'{datetime.today().strftime("%D %H:%M")}'))
+    cursor.execute(f'INSERT INTO Tasks{message.from_user.id} (task, time) VALUES (?, ?)', (f'{message.text}', f'{datetime.today().strftime("%Y.%m.%d %H:%M")}'))
 
     connection.commit()
     cursor.close()
