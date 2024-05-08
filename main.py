@@ -72,6 +72,7 @@ def view_tasks(message):
     kb1 = ''
     global exists_task
     exists_task = True
+    global count
     count = 0
 
     dic = {}
@@ -80,7 +81,6 @@ def view_tasks(message):
         kb1 = types.InlineKeyboardMarkup()
         dic["btn" + str(count)] = types.InlineKeyboardButton(text=f'{i[0]}', callback_data=count)
         exists_task = False
-
     if exists_task:
         bot.send_message(message.chat.id, "Задач еще нет!")
     else:
@@ -98,9 +98,10 @@ def send_welcome(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton('Добавить задачу')
     btn2 = types.KeyboardButton('Показать задачи')
-    markup.row(btn1, btn2)
+    btn3 = types.KeyboardButton('Удалить задачу')
+    markup.row(btn1, btn2, btn3)
     add_user_data(message)
-    bot.send_message(message.chat.id, f'Ку {message.from_user.first_name} я todo list v0.0.2', reply_markup=markup)
+    bot.send_message(message.chat.id, f'Ку {message.from_user.first_name} я todo list v0.0.3', reply_markup=markup)
 
 
 @bot.message_handler(content_types=['text'])
@@ -110,6 +111,18 @@ def send_message(message):
         bot.register_next_step_handler(msg, add_task)
     if message.text == 'Показать задачи':
         view_tasks(message)
+    # if message.text == 'Удалить задачу':
+    #     delete_task(message)
+
+
+@bot.callback_query_handler(func=lambda call: True)
+def view_specific_task(call):
+    for i in range(1, count + 1):
+        if call.data == f'{i}':
+            bot.send_message(call.message.chat.id, f'Вы выбрали {i} задачу')
+            break
+        else:
+            pass
 
 
 bot.infinity_polling()
