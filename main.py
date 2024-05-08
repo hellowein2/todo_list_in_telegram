@@ -121,8 +121,6 @@ def send_message(message):
         bot.register_next_step_handler(msg, add_task)
     if message.text == 'Показать задачи':
         view_tasks(message)
-    # if message.text == 'Удалить задачу':
-    #     delete_task(message)
 
 
 @bot.callback_query_handler(func=lambda call: True)
