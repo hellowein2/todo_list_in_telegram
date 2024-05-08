@@ -8,6 +8,8 @@ API_TOKEN = API
 
 bot = telebot.TeleBot(API_TOKEN)
 
+global dic_tasks
+
 
 def add_user_data(message):
     global copyblock
@@ -37,8 +39,7 @@ def add_user_data(message):
     cursor.execute(f'''
     CREATE TABLE IF NOT EXISTS Tasks{user_id} (
     task TEXT NOT NULL,
-    time TEXT NOT NULL,
-    count TEXT
+    time TEXT NOT NULL
     )
     ''')
 
@@ -69,25 +70,30 @@ def add_task(message):
 def view_tasks(message):
     connection = sqlite3.connect('ignore/data_users.db')
     cursor = connection.cursor()
+
     global kb1
     kb1 = ''
+
     global exists_task
     exists_task = True
+
     global count
     count = 0
+
+    global dic_tasks
+    dic_tasks = []
 
     dic = {}
     for i in cursor.execute(f'SELECT * FROM Tasks{message.from_user.id}'):
         count += 1
         kb1 = types.InlineKeyboardMarkup()
         dic["btn" + str(count)] = types.InlineKeyboardButton(text=f'{i[0]}', callback_data=count)
+        dic_tasks.append(f'{i[0]}')
         exists_task = False
     if exists_task:
         bot.send_message(message.chat.id, "Задач еще нет!")
     else:
         for i in range(1, count + 1):
-            print(i)
-            cursor.execute(f'UPDATE Tasks{message.from_user.id}  SET count = {i}')
             kb1.add(dic[f'btn{i}'])
             connection.commit()
 
@@ -124,23 +130,29 @@ def view_specific_task(call):
     for i in range(1, count + 1):
         if call.data == f'{i}':
             kb1 = types.InlineKeyboardMarkup()
-            btn1 = types.InlineKeyboardButton(text='Удалить', callback_data=f'delete{i}')
+            btn1 = types.InlineKeyboardButton(text='Удалить', callback_data=f'{dic_tasks[i - 1]}')
             kb1.add(btn1)
-            bot.send_message(call.message.chat.id, f'Вы выбрали {i} задачу', reply_markup=kb1)
+            bot.send_message(call.message.chat.id, f'Вы выбрали задачу:   {dic_tasks[i - 1]}', reply_markup=kb1)
             break
         else:
             pass
 
     for i in range(1, count + 1):
-        if call.data == f'delete{i}':
+        delete_task = dic_tasks[i - 1]
+        if call.data == f'{delete_task}':
             connection = sqlite3.connect('ignore/data_users.db')
             cursor = connection.cursor()
 
-            cursor.execute()
+            cursor.execute(f'''SELECT * from Tasks{call.message.chat.id}''')
+            cursor.execute(f'DELETE FROM Tasks{call.message.chat.id} WHERE task = "{delete_task}"')
 
+            connection.commit()
             cursor.close()
             connection.close()
+
+            bot.send_message(call.message.chat.id, f'Вы удалили задачу:   {delete_task}')
         else:
             pass
+
 
 bot.infinity_polling()
