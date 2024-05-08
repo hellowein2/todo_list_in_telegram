@@ -37,7 +37,8 @@ def add_user_data(message):
     cursor.execute(f'''
     CREATE TABLE IF NOT EXISTS Tasks{user_id} (
     task TEXT NOT NULL,
-    time TEXT NOT NULL
+    time TEXT NOT NULL,
+    count TEXT
     )
     ''')
 
@@ -85,7 +86,10 @@ def view_tasks(message):
         bot.send_message(message.chat.id, "Задач еще нет!")
     else:
         for i in range(1, count + 1):
+            print(i)
+            cursor.execute(f'UPDATE Tasks{message.from_user.id}  SET count = {i}')
             kb1.add(dic[f'btn{i}'])
+            connection.commit()
 
         bot.send_message(message.chat.id, "Вот все ваши задачи", reply_markup=kb1)
 
@@ -119,10 +123,24 @@ def send_message(message):
 def view_specific_task(call):
     for i in range(1, count + 1):
         if call.data == f'{i}':
-            bot.send_message(call.message.chat.id, f'Вы выбрали {i} задачу')
+            kb1 = types.InlineKeyboardMarkup()
+            btn1 = types.InlineKeyboardButton(text='Удалить', callback_data=f'delete{i}')
+            kb1.add(btn1)
+            bot.send_message(call.message.chat.id, f'Вы выбрали {i} задачу', reply_markup=kb1)
             break
         else:
             pass
 
+    for i in range(1, count + 1):
+        if call.data == f'delete{i}':
+            connection = sqlite3.connect('ignore/data_users.db')
+            cursor = connection.cursor()
+
+            cursor.execute()
+
+            cursor.close()
+            connection.close()
+        else:
+            pass
 
 bot.infinity_polling()
