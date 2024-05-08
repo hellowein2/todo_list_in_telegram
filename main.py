@@ -56,7 +56,8 @@ def add_task(message):
         connection = sqlite3.connect('ignore/data_users.db')
         cursor = connection.cursor()
 
-        cursor.execute(f'INSERT INTO Tasks{message.from_user.id} (task, time) VALUES (?, ?)', (f'{message.text}', f'{datetime.today().strftime("%Y.%m.%d %H:%M")}'))
+        cursor.execute(f'INSERT INTO Tasks{message.from_user.id} (task, time) VALUES (?, ?)',
+                       (f'{message.text}', f'{datetime.today().strftime("%Y.%m.%d %H:%M")}'))
 
         connection.commit()
         cursor.close()
@@ -64,28 +65,33 @@ def add_task(message):
         bot.send_message(message.chat.id, 'Задача добавлена!')
 
 
-
 def view_tasks2(message):
     connection = sqlite3.connect('ignore/data_users.db')
     cursor = connection.cursor()
     global kb1
     kb1 = ''
+    global exists_task
+    exists_task = True
     count = 0
 
     dic = {}
     for i in cursor.execute(f'SELECT * FROM Tasks{message.from_user.id}'):
         count += 1
         kb1 = types.InlineKeyboardMarkup()
-        dic["btn"+str(count)] = types.InlineKeyboardButton(text=f'{i[0]}', callback_data=count)
+        dic["btn" + str(count)] = types.InlineKeyboardButton(text=f'{i[0]}', callback_data=count)
+        exists_task = False
 
-    for i in range(1, count+1):
-        kb1.add(dic[f'btn{i}'])
+    if exists_task:
+        bot.send_message(message.chat.id, "Задач еще нет!")
+    else:
+        for i in range(1, count + 1):
+            kb1.add(dic[f'btn{i}'])
 
-    bot.send_message(message.chat.id, "Привет, я бот помощник по тестам!", reply_markup=kb1)
-
+        bot.send_message(message.chat.id, "Вот все ваши задачи", reply_markup=kb1)
 
     cursor.close()
     connection.close()
+
 
 def view_tasks(message):
     connection = sqlite3.connect('ignore/data_users.db')
@@ -99,6 +105,7 @@ def view_tasks(message):
 
     cursor.close()
     connection.close()
+
 
 @bot.message_handler(commands=['help', 'start'])
 def send_welcome(message):
@@ -117,7 +124,6 @@ def send_message(message):
         bot.register_next_step_handler(msg, add_task)
     if message.text == 'Показать задачи':
         view_tasks2(message)
-
 
 
 bot.infinity_polling()
