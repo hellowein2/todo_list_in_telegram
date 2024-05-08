@@ -108,8 +108,7 @@ def send_welcome(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton('Добавить задачу')
     btn2 = types.KeyboardButton('Показать задачи')
-    btn3 = types.KeyboardButton('Удалить задачу')
-    markup.row(btn1, btn2, btn3)
+    markup.row(btn1, btn2)
     add_user_data(message)
     bot.send_message(message.chat.id, f'Ку {message.from_user.first_name} я todo list v0.0.3', reply_markup=markup)
 
