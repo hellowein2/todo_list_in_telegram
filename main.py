@@ -75,7 +75,7 @@ def add_task(message):
         bot.send_message(message.chat.id, 'Задача добавлена!')
 
 
-def view_tasks(message, check_back=None):
+def view_tasks(message, check_back=False):
     connection = sqlite3.connect('ignore/data_users.db')
     cursor = connection.cursor()
 
@@ -108,19 +108,24 @@ def view_tasks(message, check_back=None):
         for i in range(1, count + 1):
             kb1.add(dic[f'btn{i}'])
             connection.commit()
+
         if check_back:
-            bot.edit_message_text("Вот все ваши задачи", chat_id=message.from_user.id, message_id=edit_msg.message_id
-                                  , reply_markup=kb1)
+            try:
+                bot.edit_message_text("Ваши задачи: ", chat_id=message.from_user.id, message_id=edit_msg.message_id,
+                                      reply_markup=kb1)
+            except telebot.apihelper.ApiTelegramException:
+                pass
+
         else:
             if check_1:
                 try:
                     if edit_msg:
                         bot.delete_message(chat_id=message.from_user.id, message_id=edit_msg.message_id)
-                        edit_msg = bot.send_message(message.chat.id, "Вот все ваши задачи", reply_markup=kb1)
+                        edit_msg = bot.send_message(message.chat.id, "Ваши задачи: ", reply_markup=kb1)
                 except NameError or telebot.apihelper.ApiTelegramException:
-                    edit_msg = bot.send_message(message.chat.id, "Вот все ваши задачи", reply_markup=kb1)
+                    edit_msg = bot.send_message(message.chat.id, "Ваши задачи: ", reply_markup=kb1)
             else:
-                edit_msg = bot.send_message(message.chat.id, "Вот все ваши задачи", reply_markup=kb1)
+                edit_msg = bot.send_message(message.chat.id, "Ваши задачи: ", reply_markup=kb1)
                 check_1 = True
 
     cursor.close()
@@ -159,7 +164,7 @@ def view_specific_task(call):
         if call.data == f'{i}':
             kb2 = types.InlineKeyboardMarkup()
             btn1 = types.InlineKeyboardButton(text='Удалить', callback_data=f'{dic_tasks[i - 1]}delete')
-            btn2 = types.InlineKeyboardButton(text='Назад', callback_data=f'{dic_tasks[i - 1]}back')
+            btn2 = types.InlineKeyboardButton(text='Назад', callback_data='back')
             kb2.add(btn1, btn2)
 
             connection = sqlite3.connect('ignore/data_users.db')
@@ -196,9 +201,7 @@ def view_specific_task(call):
         else:
             pass
 
-    for i in range(1, count + 1):
-        back_to_view = dic_tasks[i - 1]
-        if call.data == f'{back_to_view}back':
+        if call.data == 'back':
             view_tasks(call, check_back=True)
 
 
