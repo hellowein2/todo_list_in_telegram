@@ -6,7 +6,7 @@ from ignore.api import API
 
 API_TOKEN = API
 
-__version__ = 'v.0.2.1'
+__version__ = 'v.0.2.2'
 
 bot = telebot.TeleBot(API_TOKEN)
 
