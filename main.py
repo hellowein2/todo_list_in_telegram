@@ -11,7 +11,7 @@ __version__ = 'v.0.1.1'
 bot = telebot.TeleBot(API_TOKEN)
 
 global dic_tasks
-
+global edit_msg
 
 def add_user_data(message):
     global copyblock
@@ -75,6 +75,9 @@ def view_tasks(message):
     global kb1
     kb1 = ''
 
+    global  edit_msg
+    edit_msg = ''
+
     global exists_task
     exists_task = True
 
@@ -98,7 +101,7 @@ def view_tasks(message):
             kb1.add(dic[f'btn{i}'])
             connection.commit()
 
-        bot.send_message(message.chat.id, "Вот все ваши задачи", reply_markup=kb1)
+        edit_msg = bot.send_message(message.chat.id, "Вот все ваши задачи", reply_markup=kb1)
 
     cursor.close()
     connection.close()
@@ -135,7 +138,7 @@ def view_specific_task(call):
             cursor = connection.cursor()
             # add time in message
             for y in (cursor.execute(f'SELECT time FROM Tasks{call.message.chat.id} WHERE task = "{dic_tasks[i - 1]}"')):
-                bot.send_message(call.message.chat.id, f'{dic_tasks[i - 1]} - {y[0]}', reply_markup=kb1)
+                bot.edit_message_text(f'{dic_tasks[i - 1]} - {y[0]}', chat_id=call.message.chat.id, reply_markup=kb1, message_id=edit_msg.message_id)
 
             cursor.close()
             connection.close()
