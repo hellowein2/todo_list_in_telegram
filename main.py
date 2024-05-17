@@ -65,9 +65,13 @@ def add_task(message):
     else:
         connection = sqlite3.connect('ignore/data_users.db')
         cursor = connection.cursor()
-
-        cursor.execute(f'INSERT INTO Tasks{message.from_user.id} (task, time) VALUES (?, ?)',
-                       (f'{message.text}', f'{datetime.today().strftime("%Y.%m.%d %H:%M")}'))
+        try:
+            cursor.execute(f'INSERT INTO Tasks{message.from_user.id} (task, time) VALUES (?, ?)',
+                           (f'{message.text}', f'{datetime.today().strftime("%Y.%m.%d %H:%M")}'))
+        except sqlite3.OperationalError:
+            add_user_data(message)
+            cursor.execute(f'INSERT INTO Tasks{message.from_user.id} (task, time) VALUES (?, ?)',
+                           (f'{message.text}', f'{datetime.today().strftime("%Y.%m.%d %H:%M")}'))
 
         connection.commit()
         cursor.close()
@@ -96,12 +100,16 @@ def view_tasks(message, check_back=False):
     dic_tasks = []
 
     dic = {}
-    for i in cursor.execute(f'SELECT * FROM Tasks{message.from_user.id}'):
-        count += 1
-        kb1 = types.InlineKeyboardMarkup()
-        dic["btn" + str(count)] = types.InlineKeyboardButton(text=f'{i[0]}', callback_data=count)
-        dic_tasks.append(f'{i[0]}')
-        exists_task = False
+    try:
+        for i in cursor.execute(f'SELECT * FROM Tasks{message.from_user.id}'):
+            count += 1
+            kb1 = types.InlineKeyboardMarkup()
+            dic["btn" + str(count)] = types.InlineKeyboardButton(text=f'{i[0]}', callback_data=count)
+            dic_tasks.append(f'{i[0]}')
+            exists_task = False
+    except sqlite3.OperationalError:
+        add_user_data(message)
+
     if exists_task:
         bot.send_message(message.chat.id, "Задач еще нет!")
     else:
