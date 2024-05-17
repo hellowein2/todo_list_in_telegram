@@ -6,6 +6,8 @@ from ignore.api import API
 
 API_TOKEN = API
 
+__version__ = 'v.0.1.1'
+
 bot = telebot.TeleBot(API_TOKEN)
 
 global dic_tasks
@@ -31,7 +33,6 @@ def add_user_data(message):
     for i in cursor.execute('SELECT user_id FROM Users'):
         if message.from_user.id == i[0]:
             copyblock = False
-            print('Пользователь уже в базе')
             break
     if copyblock:
         cursor.execute('INSERT INTO Users (user_id, username) VALUES (?, ?)', (f'{user_id}', f'{username}'))
@@ -110,7 +111,7 @@ def send_welcome(message):
     btn2 = types.KeyboardButton('Показать задачи')
     markup.row(btn1, btn2)
     add_user_data(message)
-    bot.send_message(message.chat.id, f'Ку {message.from_user.first_name} я todo list v0.1.0', reply_markup=markup)
+    bot.send_message(message.chat.id, f'Ку {message.from_user.first_name} я todo list {__version__}', reply_markup=markup)
 
 
 @bot.message_handler(content_types=['text'])
