@@ -12,6 +12,11 @@ bot = telebot.TeleBot(API_TOKEN)
 
 global dic_tasks
 global edit_msg
+global kb1
+global exists_task
+global count
+global copyblock
+
 
 def add_user_data(message):
     global copyblock
@@ -75,7 +80,7 @@ def view_tasks(message):
     global kb1
     kb1 = ''
 
-    global  edit_msg
+    global edit_msg
     edit_msg = ''
 
     global exists_task
@@ -114,7 +119,8 @@ def send_welcome(message):
     btn2 = types.KeyboardButton('Показать задачи')
     markup.row(btn1, btn2)
     add_user_data(message)
-    bot.send_message(message.chat.id, f'Ку {message.from_user.first_name} я todo list {__version__}', reply_markup=markup)
+    bot.send_message(message.chat.id, f'Ку {message.from_user.first_name} я todo list {__version__}',
+                     reply_markup=markup)
 
 
 @bot.message_handler(content_types=['text'])
@@ -130,15 +136,17 @@ def send_message(message):
 def view_specific_task(call):
     for i in range(1, count + 1):
         if call.data == f'{i}':
-            kb1 = types.InlineKeyboardMarkup()
+            kb2 = types.InlineKeyboardMarkup()
             btn1 = types.InlineKeyboardButton(text='Удалить', callback_data=f'{dic_tasks[i - 1]}')
-            kb1.add(btn1)
+            kb2.add(btn1)
 
             connection = sqlite3.connect('ignore/data_users.db')
             cursor = connection.cursor()
             # add time in message
-            for y in (cursor.execute(f'SELECT time FROM Tasks{call.message.chat.id} WHERE task = "{dic_tasks[i - 1]}"')):
-                bot.edit_message_text(f'{dic_tasks[i - 1]} - {y[0]}', chat_id=call.message.chat.id, reply_markup=kb1, message_id=edit_msg.message_id)
+            for y in (cursor.execute(f'SELECT time FROM Tasks{call.message.chat.id}'
+                                     f' WHERE task = "{dic_tasks[i - 1]}"')):
+                bot.edit_message_text(f'{dic_tasks[i - 1]} - {y[0]}', chat_id=call.message.chat.id, reply_markup=kb2,
+                                      message_id=edit_msg.message_id)
 
             cursor.close()
             connection.close()
