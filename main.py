@@ -6,7 +6,7 @@ from ignore.api import API
 
 API_TOKEN = API
 
-__version__ = 'v.0.1.1'
+__version__ = 'v.0.2.0'
 
 bot = telebot.TeleBot(API_TOKEN)
 
@@ -16,6 +16,8 @@ global kb1
 global exists_task
 global count
 global copyblock
+
+check_1 = True
 
 
 def add_user_data(message):
@@ -73,15 +75,16 @@ def add_task(message):
         bot.send_message(message.chat.id, 'Задача добавлена!')
 
 
-def view_tasks(message):
+def view_tasks(message, check_back=None):
     connection = sqlite3.connect('ignore/data_users.db')
     cursor = connection.cursor()
+
+    global check_1
 
     global kb1
     kb1 = ''
 
     global edit_msg
-    edit_msg = ''
 
     global exists_task
     exists_task = True
@@ -105,11 +108,28 @@ def view_tasks(message):
         for i in range(1, count + 1):
             kb1.add(dic[f'btn{i}'])
             connection.commit()
-
-        edit_msg = bot.send_message(message.chat.id, "Вот все ваши задачи", reply_markup=kb1)
+        if check_back:
+            bot.edit_message_text("Вот все ваши задачи", chat_id=message.from_user.id, message_id=edit_msg.message_id
+                                  , reply_markup=kb1)
+        else:
+            if check_1:
+                try:
+                    if edit_msg:
+                        bot.delete_message(chat_id=message.from_user.id, message_id=edit_msg.message_id)
+                        edit_msg = bot.send_message(message.chat.id, "Вот все ваши задачи", reply_markup=kb1)
+                except NameError or telebot.apihelper.ApiTelegramException:
+                    edit_msg = bot.send_message(message.chat.id, "Вот все ваши задачи", reply_markup=kb1)
+            else:
+                edit_msg = bot.send_message(message.chat.id, "Вот все ваши задачи", reply_markup=kb1)
+                check_1 = True
 
     cursor.close()
     connection.close()
+
+
+def check_delete_or_not():
+    global check_1
+    check_1 = False
 
 
 @bot.message_handler(commands=['help', 'start'])
@@ -134,11 +154,13 @@ def send_message(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def view_specific_task(call):
+    # view task
     for i in range(1, count + 1):
         if call.data == f'{i}':
             kb2 = types.InlineKeyboardMarkup()
-            btn1 = types.InlineKeyboardButton(text='Удалить', callback_data=f'{dic_tasks[i - 1]}')
-            kb2.add(btn1)
+            btn1 = types.InlineKeyboardButton(text='Удалить', callback_data=f'{dic_tasks[i - 1]}delete')
+            btn2 = types.InlineKeyboardButton(text='Назад', callback_data=f'{dic_tasks[i - 1]}back')
+            kb2.add(btn1, btn2)
 
             connection = sqlite3.connect('ignore/data_users.db')
             cursor = connection.cursor()
@@ -153,10 +175,10 @@ def view_specific_task(call):
             break
         else:
             pass
-
+    # delete task
     for i in range(1, count + 1):
         delete_task = dic_tasks[i - 1]
-        if call.data == f'{delete_task}':
+        if call.data == f'{delete_task}delete':
             connection = sqlite3.connect('ignore/data_users.db')
             cursor = connection.cursor()
 
@@ -167,9 +189,17 @@ def view_specific_task(call):
             cursor.close()
             connection.close()
 
-            bot.send_message(call.message.chat.id, f'Вы удалили задачу:   {delete_task}')
+            bot.edit_message_text(f'Вы удалили задачу:   {delete_task}', chat_id=call.message.chat.id,
+                                  message_id=edit_msg.message_id)
+            check_delete_or_not()
+
         else:
             pass
+
+    for i in range(1, count + 1):
+        back_to_view = dic_tasks[i - 1]
+        if call.data == f'{back_to_view}back':
+            view_tasks(call, check_back=True)
 
 
 bot.infinity_polling()
