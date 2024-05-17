@@ -130,7 +130,15 @@ def view_specific_task(call):
             kb1 = types.InlineKeyboardMarkup()
             btn1 = types.InlineKeyboardButton(text='Удалить', callback_data=f'{dic_tasks[i - 1]}')
             kb1.add(btn1)
-            bot.send_message(call.message.chat.id, f'Вы выбрали задачу:   {dic_tasks[i - 1]}', reply_markup=kb1)
+
+            connection = sqlite3.connect('ignore/data_users.db')
+            cursor = connection.cursor()
+            # add time in message
+            for y in (cursor.execute(f'SELECT time FROM Tasks{call.message.chat.id} WHERE task = "{dic_tasks[i - 1]}"')):
+                bot.send_message(call.message.chat.id, f'{dic_tasks[i - 1]} - {y[0]}', reply_markup=kb1)
+
+            cursor.close()
+            connection.close()
             break
         else:
             pass
