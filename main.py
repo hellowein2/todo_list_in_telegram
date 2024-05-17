@@ -16,7 +16,7 @@ global kb1
 global exists_task
 global count
 global copyblock
-
+global msg
 check_1 = True
 
 
@@ -57,10 +57,11 @@ def add_user_data(message):
 
 
 def add_task(message):
+    global msg
     if message.text == 'Показать задачи':
         view_tasks(message)
     elif message.text == 'Добавить задачу':
-        msg = bot.send_message(message.chat.id, 'Введите задачу')
+        msg = bot.edit_message_text('Введите задачу', chat_id=message.from_user.id, message_id=msg.message_id)
         bot.register_next_step_handler(msg, add_task)
     else:
         connection = sqlite3.connect('ignore/data_users.db')
@@ -76,7 +77,8 @@ def add_task(message):
         connection.commit()
         cursor.close()
         connection.close()
-        bot.send_message(message.chat.id, 'Задача добавлена!')
+        msg = bot.edit_message_text('Задача добавлена!', chat_id=message.from_user.id, message_id=msg.message_id)
+        bot.delete_message(message.chat.id, message.message_id)
 
 
 def view_tasks(message, check_back=False):
@@ -88,7 +90,7 @@ def view_tasks(message, check_back=False):
     global kb1
     kb1 = ''
 
-    global edit_msg
+    global msg
 
     global exists_task
     exists_task = True
@@ -111,30 +113,19 @@ def view_tasks(message, check_back=False):
         add_user_data(message)
 
     if exists_task:
-        bot.send_message(message.chat.id, "Задач еще нет!")
+        try:
+            bot.edit_message_text(chat_id=message.from_user.id, text="Задач еще нет!", message_id=msg.message_id)
+        except:
+            pass
     else:
         for i in range(1, count + 1):
             kb1.add(dic[f'btn{i}'])
             connection.commit()
 
-        if check_back:
             try:
-                bot.edit_message_text("Ваши задачи: ", chat_id=message.from_user.id, message_id=edit_msg.message_id,
-                                      reply_markup=kb1)
-            except telebot.apihelper.ApiTelegramException:
+                bot.edit_message_text(text="Ваши задачи: ", chat_id=message.from_user.id, reply_markup=kb1, message_id=msg.message_id)
+            except:
                 pass
-
-        else:
-            if check_1:
-                try:
-                    if edit_msg:
-                        bot.delete_message(chat_id=message.from_user.id, message_id=edit_msg.message_id)
-                        edit_msg = bot.send_message(message.chat.id, "Ваши задачи: ", reply_markup=kb1)
-                except NameError or telebot.apihelper.ApiTelegramException:
-                    edit_msg = bot.send_message(message.chat.id, "Ваши задачи: ", reply_markup=kb1)
-            else:
-                edit_msg = bot.send_message(message.chat.id, "Ваши задачи: ", reply_markup=kb1)
-                check_1 = True
 
     cursor.close()
     connection.close()
@@ -147,21 +138,30 @@ def check_delete_or_not():
 
 @bot.message_handler(commands=['help', 'start'])
 def send_welcome(message):
+    global msg
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     btn1 = types.KeyboardButton('Добавить задачу')
     btn2 = types.KeyboardButton('Показать задачи')
     markup.row(btn1, btn2)
     add_user_data(message)
-    bot.send_message(message.chat.id, f'Ку {message.from_user.first_name} я todo list {__version__}',
-                     reply_markup=markup)
+    msg = bot.send_message(message.chat.id, f'Ку {message.from_user.first_name} я todo list {__version__}',
+                           reply_markup=markup)
 
 
 @bot.message_handler(content_types=['text'])
 def send_message(message):
+    global msg
     if message.text == 'Добавить задачу':
-        msg = bot.send_message(message.chat.id, 'Введите задачу')
+        try:
+            msg = bot.edit_message_text(chat_id=message.chat.id, text='Введите задачу', message_id=msg.message_id)
+        except:
+            msg = bot.send_message(chat_id=message.chat.id, text='Введите задачу')
+
         bot.register_next_step_handler(msg, add_task)
+        bot.delete_message(message.chat.id, message.message_id)
+
     if message.text == 'Показать задачи':
+        bot.delete_message(message.chat.id, message.message_id)
         view_tasks(message)
 
 
@@ -181,7 +181,7 @@ def view_specific_task(call):
             for y in (cursor.execute(f'SELECT time FROM Tasks{call.message.chat.id}'
                                      f' WHERE task = "{dic_tasks[i - 1]}"')):
                 bot.edit_message_text(f'{dic_tasks[i - 1]} - {y[0]}', chat_id=call.message.chat.id, reply_markup=kb2,
-                                      message_id=edit_msg.message_id)
+                                      message_id=msg.message_id)
 
             cursor.close()
             connection.close()
@@ -203,7 +203,7 @@ def view_specific_task(call):
             connection.close()
 
             bot.edit_message_text(f'Вы удалили задачу:   {delete_task}', chat_id=call.message.chat.id,
-                                  message_id=edit_msg.message_id)
+                                  message_id=msg.message_id)
             check_delete_or_not()
 
         else:
